@@ -31,10 +31,10 @@ Parallux is a standard [Agent Skill](https://github.com/anthropics/skills) — a
 **Claude Code / Claude Desktop**
 ```bash
 # personal install — available in every project
-git clone https://github.com/<your-username>/parallux.git ~/.claude/skills/parallux
+git clone https://github.com/EfajTahamidRifat/parallux.git ~/.claude/skills/parallux
 
 # OR project-scoped — committed to one repo, shared via git
-git clone https://github.com/<your-username>/parallux.git .claude/skills/parallux
+git clone https://github.com/EfajTahamidRifat/parallux.git .claude/skills/parallux
 ```
 Restart your session afterward — skills are loaded at startup.
 
