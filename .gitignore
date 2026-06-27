@@ -1,0 +1,17 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Packaged skill artifacts (regenerate with package_skill.py rather than committing binaries)
+*.skill
+
+# Node, in case anyone adds tooling around the Next.js integration examples
+node_modules/
+.next/
+dist/
+build/

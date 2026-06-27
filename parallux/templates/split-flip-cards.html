@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Split Flip Cards</title>
+<style>
+  /* ============================================================
+     THEME — change these and the whole page restyles.
+     Add/remove --card-N-bg variables to match however many
+     cards you end up with; the JS doesn't hardcode a count.
+     ============================================================ */
+  :root {
+    --radius: 16px;
+    --bg-top: #14321f;
+    --bg-bottom: #000000;
+    --fg: #ffffff;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+    --card-1-bg: #27272a;
+    --card-2-bg: #14532d;
+    --card-3-bg: #09090b;
+  }
+
+  * { padding: 0; margin: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(to top, var(--bg-bottom), var(--bg-top));
+    color: var(--fg);
+    font-family: var(--font);
+    overflow-x: clip;
+  }
+
+  .italic { font-style: italic; }
+
+  /* ---------- intro ---------- */
+  .intro {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 1.5rem;
+  }
+  .intro .line1 { font-size: 2.4rem; font-family: var(--font-serif); max-width: 900px; }
+  .intro .line2 { font-size: 1.6rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
+  .split-mask { overflow: hidden; display: inline-block; } /* SplitText's mask wraps each word in something like this */
+
+  /* ---------- pinned card row ---------- */
+  .pin-section {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow: visible;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    overflow: visible;
+    will-change: transform;
+  }
+
+  .card-shell {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    width: clamp(220px, 32vw, 400px);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: visible;
+    perspective: 1000px;
+  }
+
+  .flip-inner {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    will-change: transform;
+  }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    backface-visibility: hidden;
+  }
+
+  .card-face[data-card-face="front"] {
+    transform: translateZ(4px);
+  }
+  .card-face[data-card-face="front"] img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .card-face[data-card-face="back"] {
+    transform: rotateY(180deg) translateZ(4px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2.5rem 2rem;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .card-shell:nth-child(1) .card-face.back { background: var(--card-1-bg); }
+  .card-shell:nth-child(2) .card-face.back { background: var(--card-2-bg); }
+  .card-shell:nth-child(3) .card-face.back { background: var(--card-3-bg); }
+  /* CUSTOMIZE: add --card-4-bg etc. above and a matching nth-child rule per extra card */
+
+  .card-index { font-size: 3.5rem; opacity: 0.5; margin-top: auto; margin-bottom: 1.5rem; }
+  .card-title { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 0.75rem; }
+  .card-body { margin-top: auto; font-family: var(--font-serif); font-size: 1rem; color: rgba(255,255,255,0.85); }
+
+  @media (max-width: 720px) {
+    .row { flex-wrap: wrap; }
+    .card-shell { width: min(70vw, 320px); }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============== INTRO — CUSTOMIZE: copy ============== -->
+  <div class="intro">
+    <div class="line1" data-split-text>Scroll down to see what's behind the surface</div>
+    <div class="line2" data-split-text data-delay="0.5">Three ideas, told in motion ↓</div>
+  </div>
+
+  <!-- ============== PINNED CARD ROW — CUSTOMIZE: images + back-face copy ==============
+       Add/remove .card-shell blocks to change the card count — flipParamsFor() in the
+       script below adapts to however many are here. Keep an odd number (3 or 5) for the
+       fanned-out look to read symmetrically. -->
+  <section class="pin-section">
+    <div class="row">
+
+      <div class="card-shell">
+        <div class="flip-inner">
+          <div class="card-face" data-card-face="front"><img src="assets/images/card-1.jpg" alt=""></div>
+          <div class="card-face back" data-card-face="back">
+            <div class="card-index">01</div>
+            <div class="card-title">First idea</div>
+            <div class="card-body">A short, punchy line about what this card represents.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-shell">
+        <div class="flip-inner">
+          <div class="card-face" data-card-face="front"><img src="assets/images/card-2.jpg" alt=""></div>
+          <div class="card-face back" data-card-face="back">
+            <div class="card-index">02</div>
+            <div class="card-title">Second idea</div>
+            <div class="card-body">A short, punchy line about what this card represents.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-shell">
+        <div class="flip-inner">
+          <div class="card-face" data-card-face="front"><img src="assets/images/card-3.jpg" alt=""></div>
+          <div class="card-face back" data-card-face="back">
+            <div class="card-index">03</div>
+            <div class="card-title">Third idea</div>
+            <div class="card-body">A short, punchy line about what this card represents.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+
+  /* ---------- intro text reveal ---------- */
+  document.querySelectorAll("[data-split-text]").forEach((el) => {
+    const split = SplitText.create(el, { type: "words", mask: "words" });
+    gsap.set(split.words, { opacity: 0, yPercent: 110 });
+    gsap.to(split.words, {
+      yPercent: 0,
+      opacity: 1,
+      stagger: 0.05,
+      ease: "power2.inOut",
+      duration: 1,
+      delay: parseFloat(el.dataset.delay || "0"),
+    });
+  });
+
+  /* ---------- pinned flip-card row ---------- */
+  const section = document.querySelector(".pin-section");
+  const row = document.querySelector(".row");
+  const cards = Array.from(row.querySelectorAll(".card-shell"));
+  const flippers = Array.from(row.querySelectorAll(".flip-inner"));
+  const radius = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--radius")) || 16;
+
+  // Round only the outer edges of the strip while cards sit flush; the middle
+  // edges go fully rounded later once the row spreads apart.
+  cards.forEach((card, i) => {
+    const faces = card.querySelectorAll(".card-face");
+    let r = "0";
+    if (i === 0) r = `${radius}px 0 0 ${radius}px`;
+    if (i === cards.length - 1) r = `0 ${radius}px ${radius}px 0`;
+    gsap.set(faces, { borderRadius: r });
+  });
+
+  flippers.forEach((f) => gsap.set(f, { rotationY: 0, transformStyle: "preserve-3d" }));
+
+  // Derive each card's fanned rotation/offset from its distance to the center
+  // card, so this works for any card count (not just 3).
+  function flipParamsFor(index, total) {
+    const center = (total - 1) / 2;
+    const offset = index - center;
+    return {
+      rotateZ: offset * 6,
+      moveX: offset * -70,
+      moveY: offset === 0 ? -18 : 20,
+    };
+  }
+
+  const flipTl = gsap.timeline({ paused: true });
+  flippers.forEach((flipper, i) => {
+    const { rotateZ, moveX, moveY } = flipParamsFor(i, flippers.length);
+    flipTl.to(flipper, {
+      rotationY: 180,
+      rotationZ: rotateZ,
+      x: moveX,
+      y: moveY,
+      boxShadow: "0 20px 50px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.3)",
+      duration: 0.8,
+      ease: "power2.inOut",
+      force3D: true,
+    }, 0);
+  });
+
+  flippers.forEach((flipper) => {
+    const front = flipper.querySelector('[data-card-face="front"]');
+    const back = flipper.querySelector('[data-card-face="back"]');
+    gsap.set(back, { visibility: "hidden" });
+    flipTl.set(front, { visibility: "hidden" }, 0.4);
+    flipTl.set(back, { visibility: "visible" }, 0.4);
+  });
+
+  let flipped = false;
+
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: "top top",
+      end: "+=400%",
+      pin: true,
+      scrub: 0.5,
+      anticipatePin: 1,
+      onUpdate(self) {
+        if (self.progress > 0.5 && !flipped) { flipped = true; flipTl.play(); }
+        else if (self.progress <= 0.5 && flipped) { flipped = false; flipTl.reverse(); }
+      },
+    },
+  });
+
+  tl.to(row, { scale: 0.76, duration: 1, ease: "none" }, 0);
+  tl.to(row, { gap: "5rem", duration: 1, ease: "none" }, 1);
+
+  cards.forEach((card) => {
+    const faces = card.querySelectorAll(".card-face");
+    tl.to(faces, { borderRadius: `${radius}px`, duration: 1, ease: "none" }, 1);
+  });
+
+  tl.to({}, { duration: 2 }, 2); // hold the finished state before the pin releases
+});
+</script>
+</body>
+</html>

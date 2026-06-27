@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Gallery</title>
+<style>
+  /* ============================================================
+     THEME — change these and the whole page restyles.
+     ============================================================ */
+  :root {
+    --radius: 0.8rem;
+    --header-color: #fff;          /* nav text/icon color while at the top of the page */
+    --header-color-scrolled: #121212; /* nav text/icon color once scrolled past the hero */
+    --bg: #0a0a0a;                 /* page background, shows behind/after the hero */
+    --fg: #f5f5f5;                 /* default body text color */
+    --accent: #d7ff3e;             /* used sparingly — links, small accents */
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { padding: 0; margin: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+  }
+
+  main { padding: 0.5rem; position: relative; }
+
+  /* ---------- header ---------- */
+  header {
+    position: fixed;
+    z-index: 10;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 99%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.2rem;
+    border-radius: var(--radius);
+  }
+
+  header .flex { display: flex; align-items: center; gap: 3rem; }
+
+  header .bars { display: flex; flex-direction: column; gap: 5px; }
+  header .bars div { width: 26px; height: 2px; background-color: var(--header-color); transition: background-color .3s; }
+
+  .logo { font-size: 1.4rem; font-weight: 600; letter-spacing: 2px; color: var(--header-color); transition: color .3s; }
+
+  .menu { display: flex; gap: 2.5rem; }
+  header a { text-decoration: none; color: var(--header-color); font-weight: 600; transition: color .3s; }
+
+  /* ---------- hero ---------- */
+  .hero-section { height: calc(100vh - 1rem); overflow: hidden; position: relative; }
+
+  .hero-section .inner-box {
+    padding: 0 6rem;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hero-section .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    width: 100%;
+    aspect-ratio: 1190 / 670;
+  }
+
+  .gallery img { width: 100%; border-radius: var(--radius); display: block; object-fit: cover; }
+  .gallery .col { display: flex; flex-direction: column; gap: 0.5rem; height: 100%; }
+  .gallery .col-1 { align-items: end; }
+  .gallery .col-3 { justify-content: flex-end; }
+  /* col-2 stays empty on purpose — its rect is the target shape the hero media morphs into */
+
+  img.small { aspect-ratio: 4 / 3; width: 75%; }
+  img.large { aspect-ratio: 5 / 3; }
+
+  .media-wrapper { position: absolute; inset: 0; overflow: hidden; }
+  .media-inner { width: 100%; height: 100%; transform-origin: center; }
+  .media-inner video, .media-inner img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius); display: block; }
+
+  .hero-content { padding: 0.5rem; position: absolute; bottom: 0; left: 0; color: #fff; text-align: center; width: 100%; }
+
+  h1 { font-size: 14vw; font-weight: 600; letter-spacing: -6px; line-height: 0.9; }
+
+  .divider { width: 98%; height: 1px; background-color: #ffffff80; margin: 1.4rem auto; }
+
+  .bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 1.4rem 1rem; }
+  .bottom .arrow { width: 14px; opacity: 0.85; }
+  .bottom .subtext { font-size: 0.9rem; font-weight: 500; }
+
+  /* ---------- next section (placeholder — extend/replace freely) ---------- */
+  .next-section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 6rem;
+    max-width: 900px;
+  }
+  .next-section p { font-size: 1.1rem; line-height: 1.6; opacity: 0.8; margin-top: 1rem; }
+
+  @media (max-width: 720px) {
+    .hero-section .inner-box { padding: 0 1.5rem; }
+    h1 { font-size: 18vw; letter-spacing: -3px; }
+    .menu { display: none; } /* CUSTOMIZE: swap for a mobile menu if needed */
+    .next-section { padding: 3rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <!-- ============== NAV — CUSTOMIZE: brand name + links ============== -->
+  <header>
+    <div class="flex">
+      <div class="bars"><div></div><div></div></div>
+      <a href="#">Menu</a>
+    </div>
+    <div class="logo">BRAND</div>
+    <div class="menu">
+      <a href="#">About</a>
+      <a href="#">Work</a>
+    </div>
+  </header>
+
+  <!-- ============== HERO ============== -->
+  <section class="hero-section">
+    <!-- CUSTOMIZE: if you don't have a hero video, delete the <video> block and
+         uncomment the <img> line below instead. Everything else stays the same —
+         the JS doesn't care which one is in here. -->
+    <div class="media-wrapper">
+      <div class="media-inner">
+        <video muted loop autoplay playsinline>
+          <source src="assets/videos/hero-video.mp4" type="video/mp4">
+        </video>
+        <!-- <img src="assets/images/hero-image.jpg" alt="Hero"> -->
+      </div>
+    </div>
+
+    <div class="inner-box">
+      <div class="gallery">
+        <div class="col col-1">
+          <img src="assets/images/gallery-1.jpg" loading="lazy" class="large" alt="">
+          <img src="assets/images/gallery-2.jpg" loading="lazy" class="small" alt="">
+        </div>
+        <div class="col col-2"></div>
+        <div class="col col-3">
+          <img src="assets/images/gallery-3.jpg" loading="lazy" class="small" alt="">
+          <img src="assets/images/gallery-4.jpg" loading="lazy" class="large" alt="">
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMIZE: headline + scroll cue copy -->
+    <div class="hero-content">
+      <h1>Go Onward</h1>
+      <div class="divider"></div>
+      <div class="bottom">
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
+        <div class="subtext">Scroll to explore</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== NEXT SECTION — CUSTOMIZE or duplicate for more content ============== -->
+  <section class="next-section">
+    <h2 style="font-size: 2.5rem; font-weight: 600;">The rest of the story</h2>
+    <p>Replace this section with whatever comes after the hero — more copy, a second gallery, a footer. The pinned hero animation above resolves cleanly into normal scrolling from here on.</p>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+
+  /* ---------- load-in animations ---------- */
+  gsap.from("header .logo", { scale: 0, duration: 0.6, ease: "back.out(2)" });
+
+  SplitText.create("h1", {
+    type: "lines",
+    mask: "lines",
+    autoSplit: true,
+    onSplit(self) {
+      return gsap.from(self.lines, { y: 420, duration: 0.8, ease: "power3.out" });
+    },
+  });
+
+  gsap.from(".divider", { width: 0, duration: 1, ease: "power2.out" });
+
+  /* ---------- header glass-on-scroll ---------- */
+  gsap.to("header", {
+    backdropFilter: "blur(30px)",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    width: "60%",
+    "--header-color": "#121212",
+    scrollTrigger: { trigger: "main", start: "top top", end: "+=100", scrub: 1 },
+  });
+
+  /* ---------- pinned hero: media morphs into the empty col-2 slot ---------- */
+  const hero = document.querySelector(".hero-section");
+  const col2 = document.querySelector(".col-2");
+
+  function getInset() {
+    const heroRect = hero.getBoundingClientRect();
+    const colRect = col2.getBoundingClientRect();
+    const verticalOffset = 70;
+    return {
+      top: (colRect.top - heroRect.top) + verticalOffset,
+      left: colRect.left - heroRect.left,
+      right: heroRect.right - colRect.right,
+      bottom: (heroRect.bottom - colRect.bottom) + verticalOffset,
+    };
+  }
+
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: hero,
+      start: "top top",
+      end: "+=120%",
+      scrub: 1,
+      pin: true,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+    },
+  });
+
+  tl.to(".media-wrapper", {
+    clipPath: () => {
+      const i = getInset();
+      return `inset(${i.top}px ${i.right}px ${i.bottom}px ${i.left}px round var(--radius))`;
+    },
+    ease: "power2.out",
+    duration: 1,
+  }, 0);
+
+  tl.to(".media-inner", { scale: 0.85, ease: "power2.out", duration: 1 }, 0);
+  tl.to(".hero-content", { opacity: 0, ease: "power2.out", duration: 1 }, 0);
+
+  tl.from(".col-1 img", { x: "-200%", y: "150%", stagger: 0.15, ease: "power3.out", duration: 1 }, "-=0.6");
+  tl.from(".col-3 img", { x: "200%", y: "150%", stagger: 0.15, ease: "power3.out", duration: 1 }, "-=0.8");
+});
+</script>
+</body>
+</html>

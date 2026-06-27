@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agency Scroll</title>
+<style>
+  /* ============================================================
+     THEME — change these and the whole page restyles.
+     ============================================================ */
+  :root {
+    --radius: 0.8rem;
+    --bg: #0a0a0a;                 /* page background — lives on <html> so the mood-color-shift hover effect can retint it */
+    --fg: #f5f5f5;                 /* default body text color */
+    --muted: rgba(245, 245, 245, 0.55);
+    --accent: #d7ff3e;             /* used sparingly — links, small accents, the marquee divider */
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+  }
+
+  * { padding: 0; margin: 0; box-sizing: border-box; }
+
+  html {
+    background-color: var(--bg);
+    transition: background-color 0.6s cubic-bezier(0.19, 1, 0.22, 1); /* powers the hover mood-color shift in the work list */
+  }
+  body { color: var(--fg); font-family: var(--font); overflow-x: clip; }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- preloader ---------- */
+  .loader {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+    background: var(--bg);
+  }
+  .loader-pct { font-size: 1.1rem; letter-spacing: 0.1em; color: var(--muted); }
+  .loader-pct::after { content: "%"; }
+  .loader-brand { font-size: 1.6rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  /* ---------- fixed header ---------- */
+  header {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 1.75rem;
+  }
+  .brand { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  .burger {
+    position: relative; z-index: 50; width: 44px; height: 44px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; background: none; border: none;
+  }
+  .burger span { width: 26px; height: 2px; background: var(--fg); transform-origin: center; display: block; }
+
+  /* ---------- slide-in nav overlay ---------- */
+  .nav-panel {
+    position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 480px; z-index: 40;
+    background: #000; color: #fff;
+    padding: 7rem 3rem 3rem;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .nav-links { display: flex; flex-direction: column; gap: 0.5rem; }
+  .nav-links a { font-size: 3rem; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-contact { display: flex; flex-direction: column; gap: 1.5rem; font-size: 0.95rem; color: rgba(255,255,255,0.6); }
+  .nav-socials { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .nav-socials a { text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
+  .nav-socials a:hover { color: var(--accent); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 0 1.75rem;
+  }
+  .hero h1 { font-size: clamp(2.8rem, 9vw, 7rem); font-weight: 600; letter-spacing: -0.02em; line-height: 0.95; text-transform: uppercase; }
+  .hero .sub { margin-top: 1.5rem; max-width: 480px; font-size: 1.1rem; color: var(--muted); font-family: var(--font-serif); }
+  .split-mask { overflow: hidden; display: block; } /* SplitText's line mask wraps each line in something like this */
+
+  /* ---------- marquee belt ---------- */
+  .marquee-belt { overflow: hidden; white-space: nowrap; border-top: 1px solid rgba(255,255,255,0.15); border-bottom: 1px solid rgba(255,255,255,0.15); padding: 1.4rem 0; }
+  .marquee-row { display: flex; }
+  .marquee-item { display: flex; align-items: center; gap: 2rem; padding: 0 2rem; font-size: clamp(1.4rem, 3vw, 2.2rem); text-transform: uppercase; font-weight: 500; white-space: nowrap; }
+  .marquee-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex: none; }
+
+  /* ---------- services: sticky stacking cards ---------- */
+  .services { padding: 8rem 1.75rem 2rem; }
+  .section-heading { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 600; text-transform: uppercase; margin-bottom: 3rem; }
+  .stack-card {
+    position: sticky;
+    background: var(--bg);
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding: 2.5rem 0;
+    display: flex; gap: 2rem; justify-content: space-between; flex-wrap: wrap;
+  }
+  .stack-card .index { font-size: 1rem; color: var(--muted); flex: none; width: 3rem; }
+  .stack-card .title { font-size: clamp(1.6rem, 3.5vw, 2.4rem); flex: 1 1 260px; }
+  .stack-card .desc { flex: 1 1 320px; color: var(--muted); font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; }
+
+  /* ---------- work: magnetic cursor preview list ---------- */
+  .work { padding: 4rem 1.75rem 6rem; }
+  .project-list { display: flex; flex-direction: column; }
+  .project-row {
+    position: relative; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 2rem 0; border-top: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+  }
+  .project-row .overlay {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.04); z-index: -1;
+    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+  }
+  .project-row h3 { font-size: clamp(1.6rem, 4vw, 2.8rem); text-transform: uppercase; }
+  .project-row .meta { color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; flex: none; }
+
+  .preview-image {
+    position: fixed; top: 0; left: 0; width: 320px; aspect-ratio: 4 / 3; pointer-events: none;
+    z-index: 60; opacity: 0; overflow: hidden; border-radius: var(--radius);
+  }
+  .preview-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* mobile inline preview — shown instead of the cursor-follow image when there's no hover capability */
+  .project-row .mobile-preview { display: none; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius); object-fit: cover; margin-top: 1rem; }
+
+  /* ---------- footer ---------- */
+  footer { padding: 4rem 1.75rem 3rem; }
+  .footer-cta { font-size: clamp(2rem, 6vw, 4rem); font-weight: 600; text-transform: uppercase; max-width: 700px; }
+  .footer-bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 3rem; flex-wrap: wrap; gap: 1.5rem; }
+  .footer-bottom .email { font-size: 1.1rem; }
+  .footer-socials { display: flex; gap: 1.5rem; }
+  .footer-socials a { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .footer-socials a:hover { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .nav-links a { font-size: 2.2rem; }
+    .stack-card { flex-direction: column; gap: 0.75rem; }
+    .preview-image { display: none; } /* no cursor on touch — inline image below takes over instead */
+    .project-row .mobile-preview { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== PRELOADER ============== -->
+<div class="loader">
+  <div class="loader-brand" data-scramble>BRAND</div>
+  <div class="loader-pct">0</div>
+</div>
+
+<!-- ============== HEADER + BURGER ============== -->
+<header>
+  <div class="brand">BRAND</div>
+  <button class="burger" aria-label="Open menu">
+    <span></span>
+    <span></span>
+  </button>
+</header>
+
+<!-- ============== SLIDE-IN NAV — CUSTOMIZE: links + contact ============== -->
+<div class="nav-panel">
+  <div class="nav-links">
+    <a href="#work">Work</a>
+    <a href="#services">Services</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="nav-contact">
+    <div>hello@brand.com</div>
+    <div class="nav-socials">
+      <a href="#">Instagram</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">Twitter</a>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- ============== HERO — CUSTOMIZE: headline + subhead ============== -->
+  <section class="hero">
+    <h1 data-split-headline>We build brands that move</h1>
+    <p class="sub">A small studio making web experiences that feel as good to use as they look.</p>
+  </section>
+
+  <!-- ============== MARQUEE BELT — CUSTOMIZE: repeated phrase ============== -->
+  <div class="marquee-belt">
+    <div class="marquee-row" id="marquee-1">
+      <span class="marquee-item">Design <span class="dot"></span></span>
+      <span class="marquee-item">Development <span class="dot"></span></span>
+      <span class="marquee-item">Motion <span class="dot"></span></span>
+      <span class="marquee-item">Strategy <span class="dot"></span></span>
+      <!-- duplicated so the loop never visibly runs out — keep this block repeated 3x total -->
+      <span class="marquee-item">Design <span class="dot"></span></span>
+      <span class="marquee-item">Development <span class="dot"></span></span>
+      <span class="marquee-item">Motion <span class="dot"></span></span>
+      <span class="marquee-item">Strategy <span class="dot"></span></span>
+      <span class="marquee-item">Design <span class="dot"></span></span>
+      <span class="marquee-item">Development <span class="dot"></span></span>
+      <span class="marquee-item">Motion <span class="dot"></span></span>
+      <span class="marquee-item">Strategy <span class="dot"></span></span>
+    </div>
+  </div>
+
+  <!-- ============== SERVICES — sticky stacking cards. CUSTOMIZE: add/remove .stack-card blocks ============== -->
+  <section class="services" id="services">
+    <h2 class="section-heading">Services</h2>
+
+    <div class="stack-card">
+      <div class="index">01</div>
+      <div class="title">Brand &amp; Identity</div>
+      <div class="desc">Naming, visual identity, and the design system that holds it all together.</div>
+    </div>
+    <div class="stack-card">
+      <div class="index">02</div>
+      <div class="title">Web Design &amp; Build</div>
+      <div class="desc">From first sketch to a production site, built fast and built to last.</div>
+    </div>
+    <div class="stack-card">
+      <div class="index">03</div>
+      <div class="title">Motion &amp; Interaction</div>
+      <div class="desc">The small, deliberate animations that make a site feel alive.</div>
+    </div>
+  </section>
+
+  <!-- ============== WORK — magnetic cursor preview list. CUSTOMIZE: images + project info ==============
+       data-preview-src is the floating cursor-follow image; data-mood (optional) subtly retints the
+       page background while that row is hovered — drop the attribute if you don't want that touch. -->
+  <section class="work" id="work">
+    <h2 class="section-heading">Work</h2>
+    <div class="project-list">
+      <div class="project-row" data-preview-src="assets/images/project-1.jpg" data-mood="#1a2e1a">
+        <span class="overlay"></span>
+        <h3>Solstice</h3>
+        <span class="meta">Branding</span>
+        <img class="mobile-preview" src="assets/images/project-1.jpg" alt="">
+      </div>
+      <div class="project-row" data-preview-src="assets/images/project-2.jpg" data-mood="#1a1a35">
+        <span class="overlay"></span>
+        <h3>Northwind</h3>
+        <span class="meta">Web Design</span>
+        <img class="mobile-preview" src="assets/images/project-2.jpg" alt="">
+      </div>
+      <div class="project-row" data-preview-src="assets/images/project-3.jpg" data-mood="#351a1a">
+        <span class="overlay"></span>
+        <h3>Aperture</h3>
+        <span class="meta">Product</span>
+        <img class="mobile-preview" src="assets/images/project-3.jpg" alt="">
+      </div>
+    </div>
+    <div class="preview-image"><img src="" alt=""></div>
+  </section>
+
+  <!-- ============== FOOTER / CONTACT — CUSTOMIZE: copy + contact info ============== -->
+  <footer id="contact">
+    <div class="footer-cta">Got a project in mind? Let's talk.</div>
+    <div class="footer-bottom">
+      <a class="email" href="mailto:hello@brand.com">hello@brand.com</a>
+      <div class="footer-socials">
+        <a href="#">Instagram</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">Twitter</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="marquee-belt" style="border-top:none;">
+    <div class="marquee-row" id="marquee-2">
+      <span class="marquee-item">Let's talk <span class="dot"></span></span>
+      <span class="marquee-item">Let's talk <span class="dot"></span></span>
+      <span class="marquee-item">Let's talk <span class="dot"></span></span>
+      <span class="marquee-item">Let's talk <span class="dot"></span></span>
+      <span class="marquee-item">Let's talk <span class="dot"></span></span>
+      <span class="marquee-item">Let's talk <span class="dot"></span></span>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Observer.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  gsap.registerPlugin(ScrollTrigger, SplitText, Observer);
+
+  const hasHover = window.matchMedia("(hover: hover)").matches && window.innerWidth > 768;
+
+  /* ---------- text scramble reveal ---------- */
+  function scrambleText(el, { duration = 1000, charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" } = {}) {
+    const original = el.textContent;
+    const totalFrames = Math.round(duration / 33);
+    let frame = 0;
+    const tick = () => {
+      frame++;
+      const revealCount = Math.floor((frame / totalFrames) * original.length);
+      el.textContent = original
+        .split("")
+        .map((ch, i) => (ch === " " || i < revealCount ? ch : charset[(Math.random() * charset.length) | 0]))
+        .join("");
+      if (frame < totalFrames) requestAnimationFrame(tick);
+      else el.textContent = original;
+    };
+    tick();
+  }
+
+  /* ---------- asset-gated preloader ---------- */
+  function gateOnAssetsLoaded(onProgress, onDone) {
+    const assets = [...document.querySelectorAll("img, video")];
+    if (assets.length === 0) return onDone();
+    let loaded = 0;
+    assets.forEach((el) => {
+      const mark = () => { loaded++; onProgress(loaded / assets.length); if (loaded === assets.length) onDone(); };
+      if (el.tagName === "IMG") el.complete ? mark() : el.addEventListener("load", mark, { once: true });
+      else el.readyState >= 3 ? mark() : el.addEventListener("loadeddata", mark, { once: true });
+      el.addEventListener("error", mark, { once: true });
+    });
+  }
+
+  const pctEl = document.querySelector(".loader-pct");
+
+  /* split first, paused — fired for real once revealPage() runs */
+  let heroLines = null;
+  SplitText.create("[data-split-headline]", {
+    type: "lines",
+    mask: "lines",
+    autoSplit: true,
+    onSplit(self) { heroLines = self.lines; gsap.set(self.lines, { y: 420 }); },
+  });
+  gsap.set(".hero .sub", { opacity: 0, y: 20 });
+
+  function playHeroIntro() {
+    gsap.to(heroLines, { y: 0, duration: 0.9, ease: "power3.out", stagger: 0.06 });
+    gsap.to(".hero .sub", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
+  }
+
+  let revealed = false;
+  function revealPage() {
+    if (revealed) return;
+    revealed = true;
+    gsap.timeline()
+      .to(".loader", { yPercent: -100, duration: 0.8, ease: "power3.inOut" })
+      .add(() => scrambleText(document.querySelector("header .brand"), { duration: 700 }))
+      .add(playHeroIntro, "-=0.3");
+  }
+  gateOnAssetsLoaded(
+    (fraction) => { pctEl.textContent = Math.floor(fraction * 100); },
+    revealPage
+  );
+  setTimeout(revealPage, 6000); // hard cap so a slow connection can't block the page indefinitely
+  scrambleText(document.querySelector(".loader-brand"));
+
+  /* ---------- slide-in nav overlay ---------- */
+  const navLinks = gsap.utils.toArray(".nav-links a, .nav-contact");
+  gsap.set(".nav-panel", { xPercent: 100 });
+  gsap.set(navLinks, { autoAlpha: 0, x: -20 });
+
+  const panelTl = gsap.timeline({ paused: true })
+    .to(".nav-panel", { xPercent: 0, duration: 0.8, ease: "power3.out" })
+    .to(navLinks, { autoAlpha: 1, x: 0, stagger: 0.08, duration: 0.5, ease: "power2.out" }, "<");
+
+  const burgerSpans = document.querySelectorAll(".burger span");
+  const iconTl = gsap.timeline({ paused: true })
+    .to(burgerSpans[0], { rotate: 45, y: 4, duration: 0.3, ease: "power2.inOut" })
+    .to(burgerSpans[1], { rotate: -45, y: -4, duration: 0.3, ease: "power2.inOut" }, "<");
+
+  let navOpen = false;
+  document.querySelector(".burger").addEventListener("click", () => {
+    if (navOpen) { panelTl.reverse(); iconTl.reverse(); }
+    else {
+      panelTl.play(); iconTl.play();
+      document.querySelectorAll(".nav-links a").forEach((a, i) => {
+        setTimeout(() => scrambleText(a, { duration: 500 }), i * 80);
+      });
+    }
+    navOpen = !navOpen;
+  });
+
+  /* ---------- velocity marquee (infinite loop + scroll speed-up) ---------- */
+  function horizontalLoop(items, { speed = 1, repeat = -1, paddingRight = 0 } = {}) {
+    items = gsap.utils.toArray(items);
+    const tl = gsap.timeline({
+      repeat,
+      defaults: { ease: "none" },
+      onReverseComplete: () => tl.totalTime(tl.rawTime() + tl.duration() * 100),
+    });
+    const widths = [], xPercents = [];
+    const pixelsPerSecond = speed * 100;
+    let totalWidth;
+
+    gsap.set(items, {
+      xPercent: (i, el) => {
+        widths[i] = parseFloat(gsap.getProperty(el, "width", "px"));
+        return (xPercents[i] = (parseFloat(gsap.getProperty(el, "x", "px")) / widths[i]) * 100 + gsap.getProperty(el, "xPercent"));
+      },
+    });
+    gsap.set(items, { x: 0 });
+
+    const last = items.length - 1;
+    totalWidth = items[last].offsetLeft + (xPercents[last] / 100) * widths[last]
+      - items[0].offsetLeft + items[last].offsetWidth * gsap.getProperty(items[last], "scaleX") + paddingRight;
+
+    items.forEach((item, i) => {
+      const curX = (xPercents[i] / 100) * widths[i];
+      const distanceToStart = item.offsetLeft + curX - items[0].offsetLeft;
+      const distanceToLoop = distanceToStart + widths[i] * gsap.getProperty(item, "scaleX");
+      tl.to(item, { xPercent: ((curX - distanceToLoop) / widths[i]) * 100, duration: distanceToLoop / pixelsPerSecond }, 0)
+        .fromTo(item,
+          { xPercent: ((curX - distanceToLoop + totalWidth) / widths[i]) * 100 },
+          { xPercent: xPercents[i], duration: (curX - distanceToLoop + totalWidth - curX) / pixelsPerSecond, immediateRender: false },
+          distanceToLoop / pixelsPerSecond);
+    });
+
+    tl.progress(1, true).progress(0, true);
+    return tl;
+  }
+
+  function wireMarquee(rowSelector, reverse) {
+    const tl = horizontalLoop(`${rowSelector} .marquee-item`, { repeat: -1, paddingRight: 40 });
+    if (reverse) tl.reverse();
+    Observer.create({
+      onChangeY(self) {
+        const factor = ((!reverse && self.deltaY < 0) || (reverse && self.deltaY > 0) ? 1 : -1) * 2.5;
+        gsap.timeline({ defaults: { ease: "none" } })
+          .to(tl, { timeScale: factor * 2.5, duration: 0.2, overwrite: true })
+          .to(tl, { timeScale: factor / 2.5, duration: 1 }, "+=0.3");
+      },
+    });
+  }
+  wireMarquee("#marquee-1", false);
+  wireMarquee("#marquee-2", true);
+
+  /* ---------- services: sticky stacking cards ---------- */
+  document.querySelectorAll(".stack-card").forEach((card, i) => {
+    card.style.top = `calc(8vh + ${i * 2.5}rem)`;
+    gsap.from(card, {
+      y: 120,
+      opacity: 0,
+      duration: 1,
+      ease: "circ.out",
+      scrollTrigger: { trigger: card, start: "top 85%" },
+    });
+  });
+
+  /* ---------- work: magnetic cursor preview + mood-color shift ---------- */
+  if (hasHover) {
+    const preview = document.querySelector(".preview-image");
+    const previewImg = preview.querySelector("img");
+    const moveX = gsap.quickTo(preview, "x", { duration: 0.6, ease: "power3.out" });
+    const moveY = gsap.quickTo(preview, "y", { duration: 0.8, ease: "power3.out" });
+
+    document.addEventListener("mousemove", (e) => {
+      moveX(e.clientX + 24);
+      moveY(e.clientY - preview.offsetHeight / 2);
+    });
+
+    document.querySelectorAll(".project-row").forEach((row) => {
+      row.addEventListener("mouseenter", () => {
+        previewImg.src = row.dataset.previewSrc;
+        gsap.to(row.querySelector(".overlay"), { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", duration: 0.4, ease: "power2.out" });
+        gsap.to(preview, { opacity: 1, scale: 1, duration: 0.3 });
+        if (row.dataset.mood) document.documentElement.style.backgroundColor = row.dataset.mood;
+      });
+      row.addEventListener("mouseleave", () => {
+        gsap.to(row.querySelector(".overlay"), { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)", duration: 0.3, ease: "power2.in" });
+        gsap.to(preview, { opacity: 0, scale: 0.95, duration: 0.3 });
+        document.documentElement.style.backgroundColor = "";
+      });
+    });
+  }
+
+  gsap.from(".project-row", {
+    y: 60,
+    opacity: 0,
+    duration: 0.8,
+    stagger: 0.12,
+    ease: "power2.out",
+    scrollTrigger: { trigger: ".work", start: "top 75%" },
+  });
+
+  /* ---------- footer entrance ---------- */
+  gsap.from(".footer-cta", {
+    y: 60,
+    opacity: 0,
+    duration: 1,
+    ease: "power3.out",
+    scrollTrigger: { trigger: "footer", start: "top 80%" },
+  });
+});
+</script>
+</body>
+</html>
