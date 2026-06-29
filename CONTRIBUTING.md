@@ -10,17 +10,30 @@ Parallux grows mainly by extracting good techniques from real reference codebase
    - A row in the lookup table at the top (effect description → pattern name).
    - A section with the snippet, a short explanation of *why* it's built that way, and any gotchas (easing choices, reverse-direction behavior, mobile fallbacks).
 4. If it's substantial enough to need its own framework variant, add the React/`useGSAP` version to `parallux/references/nextjs-integration.md` too.
+5. Update `SKILL.md` if the new pattern warrants a mention in the "Foundation" or technique list sections.
+
+## Feeding it reference codebases
+
+The fastest way to improve Parallux is to point it at Awwwards-winning or otherwise high-quality open-source codebases. The process:
+
+1. Upload (or link) the codebase alongside the Parallux skill files in a Claude session.
+2. Ask Claude to study the codebase, extract the core animation/interaction techniques, and add them to `patterns.md` as documented snippets — rewritten to be framework-agnostic rather than copied verbatim.
+3. Review the extracted patterns, clean up any framework-specific artifacts, and submit as a PR.
+
+Codebases already studied and incorporated: musabhassan.com, Truus.co, Kintaro, portfolio-main, webgl-portfolio.
+
+Good candidates to add next: sites featuring page transition animations, audio-reactive motion, scroll-jacked horizontal sections, or WebGL shader transitions not yet covered.
 
 ## Adding or editing a template
 
 Templates in `parallux/templates/` are complete, working, single-file sites — not snippets. If you add one:
 
-- Keep it self-contained (inline `<style>`/`<script>`, GSAP loaded from a CDN, no build step).
+- Keep it self-contained (inline `<style>`/`<script>`, GSAP + Lenis loaded from CDN, no build step).
 - Centralize theme values (colors, radius, font) in a `:root` CSS block at the top.
-- Reference image/video assets via `assets/images/...` / `assets/videos/...` to match the existing convention.
-- Mark customization points with `<!-- CUSTOMIZE: ... -->` comments, the same way the existing templates do.
-- Validate it before submitting: check the inline `<script>` with `node --check`, and confirm HTML tags/CSS braces balance. (A quick way: extract the `<script>` and `<style>` blocks and run them through `node --check` / a brace count — see the repo's commit history for the approach used on existing templates.)
-- Add a matching entry to `parallux/references/asset-guide.md` (what it needs, and whether that's something to ask the user for or to auto-source) and to the reference map / pattern table in `SKILL.md`.
+- Reference image/video assets via `assets/images/...` / `assets/videos/...`.
+- Mark customization points with `<!-- CUSTOMIZE: ... -->` comments.
+- Validate before submitting: extract the `<script>` block and run `node --check` on it; confirm HTML tags/CSS braces balance.
+- Add a matching entry to `parallux/references/asset-guide.md` and to the reference map in `SKILL.md`.
 
 ## Reporting a bad build
 
@@ -31,4 +44,4 @@ If Parallux produces something broken or visually off, the most useful report in
 
 ## Code of conduct
 
-Be direct, be kind, assume good faith. Disagreements about taste (easing curves, color choices) are normal in a project like this — argue from "here's why it reads better" rather than just preference.
+Be direct, be kind, assume good faith. Disagreements about taste (easing curves, color choices) are normal — argue from "here's why it reads better" rather than just preference.
