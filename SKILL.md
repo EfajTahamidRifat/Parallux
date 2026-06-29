@@ -1,50 +1,157 @@
 ---
 name: parallux
-description: Build cinematic, high-end, scroll-driven "awwwards-style" animated websites — pinned sections, image/video reveals, 3D card flips, split-text and text-scramble reveals, velocity marquees, magnetic cursor previews, slide-in nav menus, sticky stacking cards, asset-gated preloaders, and optional 3D/WebGL heroes, via GSAP/ScrollTrigger (and Three.js for 3D). Use whenever the user asks for an "animated website," "awwwards website," "scroll animation site," "agency site," "portfolio site," "hero animation," "GSAP landing page," "parallax site," or "marquee," or describes scroll-driven motion — even without naming GSAP, and even for elaborate "make it premium/high-end" requests. Always build the most visually striking version the request supports — polish is the floor. Use the user's own uploaded assets when available; otherwise auto-source and download real stock photos/video from Pexels and Unsplash (see references/stock-assets.md) instead of asking for uploads or using flat placeholders.
+description: Build cinematic, award-winning, scroll-driven "Awwwards-quality" animated websites — the kind that win Site of the Day. Covers: Lenis smooth scroll + GSAP ScrollTrigger scrub timelines, per-letter/word mask reveals, WebGL noise-distortion image warping, interactive particle fields, blob/liquid cursor followers, SVG morphing preloaders with progress rings, flip cards, velocity marquees, magnetic cursor, sticky stacking cards, horizontal text drift, clip-path morphs, mood-color shifts, and real 3D/WebGL heroes. Use whenever the user asks for an "animated website", "Awwwards website", "scroll animation site", "agency site", "portfolio site", "hero animation", "GSAP landing page", "parallax site", "premium landing page", "WebGL site", "interactive website", or describes scroll-driven or cinematic motion — even without naming any library. Always produce the most visually striking version the request supports. Lean toward Lenis + GSAP for smooth scroll, add canvas-based particles or WebGL effects when they'd elevate the piece, and use the user's own uploaded assets when available, otherwise auto-source real stock photos/video from Pexels and Unsplash.
 ---
 
-# Animated Website Builder
+# Awwwards-Winning Animated Website Builder
 
-This skill builds the kind of high-polish, scroll-driven site you see on Awwwards: a hero that morphs as you scroll, text that reveals word-by-word or scrambles into place, cards that flip in 3D or stack as you pass them, an infinite marquee that speeds up with your scroll, a full-screen nav that slides in, a cursor-follow preview on a project list, even a real loading screen gated on actual asset progress — recombined from a focused set of well-understood techniques. The engine behind nearly all of it is GSAP + ScrollTrigger (plus the free SplitText and Observer plugins); a 3D hero, when one's actually wanted, adds Three.js on top.
+This skill produces the kind of high-polish, scroll-driven, interaction-rich site that wins Awwwards Site of the Day. Every deliverable should feel hand-crafted and alive — Lenis smooth scroll that glides like butter, text that mask-reveals letter by letter, images that distort on scroll with WebGL noise shaders, cursors that bubble and follow with elastic easing, preloaders with SVG progress rings, and particle fields that scatter away from the mouse.
 
-The deliverable is a **single self-contained HTML file** loading GSAP from a CDN. No npm install, no build step, no server. That's the right default because it works identically everywhere: it renders live as an HTML artifact in claude.ai, opens directly in any browser, and can be dropped into any existing project. Only deviate from this (see `references/nextjs-integration.md`) if the user is explicitly already working inside a Next.js/React codebase and wants real components, not a static file.
+The engine stack: **Lenis** (smooth scroll) + **GSAP + ScrollTrigger** (timelines) + **canvas / Three.js** (particles, WebGL heroes, distortion). Single self-contained HTML file by default. React/Next.js component versions available via `references/nextjs-integration.md`.
 
-## Step 1 — Always nail down scope before writing code
+---
 
-These sites are built *around* visuals and copy, so a few quick decisions up front save a rebuild later. **Before writing any code**, figure out:
+## Step 1 — Nail scope before writing a line of code
 
-1. **Which pattern(s) fit the request — and lean ambitious.** Skim the table in `references/patterns.md` and pick the closest match(es). Three starting templates cover most requests: "hero gallery + video reveal" (`templates/hero-gallery.html`), "flipping card row" (`templates/split-flip-cards.html`), or a fuller multi-section build with a preloader, slide-in nav, marquee, sticky-stacking services, and a magnetic-cursor project list (`templates/agency-scroll.html`). Default to the most visually striking version the request reasonably supports rather than the minimal one — for an open-ended ask ("make me a cool animated site for my studio") or anything that reads as a fuller "agency/portfolio" site, that means leaning toward `agency-scroll.html` and combining patterns rather than shipping a single bare effect. A quick single-select question on which vibe they want is reasonable when it's genuinely unclear. If they specifically want a 3D/WebGL hero (a real rotating/floating model, not just an image), see `references/3d-hero.md` and ask for a `.glb`/`.gltf` model — don't default into 3D for a generic "make it impressive" ask.
-2. **What assets each pattern needs — then go get them.** Check `references/asset-guide.md` for the exact shot list (how many images, what aspect ratio, whether a video helps, whether a 3D model is involved). If the user already has their own images/video (uploaded, or clearly described brand assets), use those. **Otherwise, don't ask them to go find and upload photos** — automatically source and download real, matching stock photography (and stock video, where the pattern calls for it) from Pexels and Unsplash instead, per `references/stock-assets.md`, and save it into an `assets/` folder. A flat color block is a worse default than a real photo that's merely generic.
-3. **The words.** Headline, subhead/tagline, nav links, brand name, and (for card layouts) the short blurb on each card back. Ask for these alongside the vibe question below, or offer to draft punchy placeholder copy the user can edit — but say clearly that it's a draft if you do. These words also double as search terms for sourcing stock imagery in step 2, so it's worth getting them first.
-4. **Vibe**, briefly: dark/moody vs. light/airy, and any accent color. One quick question is enough — don't interrogate the user over many turns. This also drives what stock photography to search for.
+Before any code, decide:
 
-If the user explicitly says to skip the asset-sourcing step (e.g. "just use placeholders," "I'll add my own images later"), honor that and use solid-color or gradient blocks instead — but that's the exception now, not the default. Either way, never hotlink an arbitrary image found on the web outside of Pexels/Unsplash — that's fragile and often a real copyright problem, unlike downloading from those two under their free-use licenses.
+1. **Which pattern(s) fit — and lean ambitious.** Read `references/patterns.md`. Default templates: `templates/hero-gallery.html` (hero video/image gallery + clip-path reveal), `templates/split-flip-cards.html` (3D flip cards), `templates/agency-scroll.html` (full multi-section: preloader → marquee → stacking cards → project list). For open-ended asks, default to `agency-scroll.html` plus at least one NEW pattern from patterns.md (e.g. add WebGL distortion to the hero, or interactive particles to the contact section). **If asked for a "portfolio" or "creative agency" site, include a Lenis smooth scroll + custom cursor + blur-reveal on scroll as a baseline minimum.**
 
-Don't skip this step even if the user's prompt sounds detailed — "build me a hero site like Sondr" still leaves open *what it says* and *exactly which vibe of photography* fits, even though sourcing the photos themselves no longer requires waiting on the user.
+2. **Assets.** Check `references/asset-guide.md`. Use user uploads if available. Otherwise auto-download real stock from Pexels/Unsplash per `references/stock-assets.md`. Never use flat color placeholders as the default — a mediocre real photo beats a gray box.
+
+3. **Copy.** Headline, subhead, nav links, brand name, card copy. Ask or draft punchy placeholder copy clearly labeled as a draft.
+
+4. **Vibe.** Dark/moody vs. light/airy, accent color. One question. This drives both photography choice and the token system.
+
+---
 
 ## Step 2 — Build the page
 
-1. Copy the closest-matching file from `templates/` into the workspace (`/home/claude`) as a starting point. These are complete, tested single-file sites — read the file fully before editing so you understand how the CSS variables, data-attributes, and timeline wiring connect.
-2. Source the visuals before wiring up the rest: if the user provided their own, use those; otherwise follow `references/stock-assets.md` to find and download matching stock photos/video into `assets/images/` and `assets/videos/` (the templates already reference assets at these paths).
-3. Swap in the real image/video filenames, headline copy, nav links, and color variables (each template centralizes colors/radius/font in a `:root` CSS block at the top — change values there, not by hunting through the rest of the file).
-4. For anything beyond what the templates cover (extra sections, a different effect, more cards, a different reveal), reuse the relevant snippet from `references/patterns.md` rather than inventing new ScrollTrigger logic from scratch — these patterns are deliberately easy to recombine (e.g. add a third pinned section that reuses the clip-path-reveal pattern with different content). When in doubt about scope, add rather than trim — a richer, more layered build reads as more "awwwards" than a safely minimal one.
-5. Keep the file self-contained: inline the `<style>` and `<script>`, reference assets by relative filename (`assets/images/...`, `assets/videos/...`), and don't introduce npm packages or build tooling.
-6. GSAP plugins (ScrollTrigger, SplitText, Observer) have been free for commercial use since Webflow's acquisition of GreenSock — no license key or attribution comment needed.
-7. Fonts: default to a solid system font stack so the page renders identically everywhere, including inside the in-chat artifact preview. Google Fonts (or other external font CDNs) work fine once the file is opened directly in a browser, but may not load inside the sandboxed artifact iframe — mention this tradeoff if the user wants a specific custom font, rather than silently picking one that might not render in-chat.
+### Foundation (always include these on any "premium" build)
 
-## Step 3 — Deliver it
+**Lenis smooth scroll** — wired to GSAP's ticker so ScrollTrigger stays synced:
 
-Save the final file to `/mnt/user-data/outputs/<descriptive-name>.html`, copy the `assets/` folder it references alongside it (same relative paths used in the markup, whether the images came from the user's uploads or were downloaded per `references/stock-assets.md`), and call `present_files` with the HTML file plus the asset files. Because it's a `.html` file there, it also renders live as an artifact in the conversation — the user gets both an interactive preview and a downloadable, standalone bundle in one step, not just a preview that breaks once the chat ends.
+```html
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script>
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smoothWheel: true,
+  touchMultiplier: 1.5,
+});
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(time => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+</script>
+```
 
-If, instead, the user wants this woven into an existing Next.js/React project, read `references/nextjs-integration.md` and adapt those components into their codebase instead of producing a standalone HTML file.
+**Custom cursor** (always include on desktop builds — it's a signal quality marker):
+
+```html
+<div class="cursor" id="cursor"></div>
+<div class="cursor-follower" id="cursorFollower"></div>
+<style>
+  .cursor, .cursor-follower {
+    position: fixed; top: 0; left: 0; border-radius: 50%;
+    pointer-events: none; z-index: 9999; transform: translate(-50%, -50%);
+    will-change: transform;
+  }
+  .cursor { width: 8px; height: 8px; background: #fff; mix-blend-mode: difference; }
+  .cursor-follower {
+    width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.4);
+    transition: width 0.3s, height 0.3s, background 0.3s;
+  }
+  body:hover .cursor { opacity: 1; }
+  /* Expand follower on hover of interactive elements */
+  a:hover ~ #cursorFollower, button:hover ~ #cursorFollower { width: 56px; height: 56px; background: rgba(255,255,255,0.1); }
+</style>
+<script>
+const cursor = document.getElementById('cursor');
+const follower = document.getElementById('cursorFollower');
+const xTo = gsap.quickTo(cursor, 'x', { duration: 0.1, ease: 'power3.out' });
+const yTo = gsap.quickTo(cursor, 'y', { duration: 0.1, ease: 'power3.out' });
+const fxTo = gsap.quickTo(follower, 'x', { duration: 0.5, ease: 'power3.out' });
+const fyTo = gsap.quickTo(follower, 'y', { duration: 0.5, ease: 'power3.out' });
+window.addEventListener('mousemove', e => { xTo(e.clientX); yTo(e.clientY); fxTo(e.clientX); fyTo(e.clientY); });
+
+// Blob/elastic cursor on hover — inspired by Truus.co Awwwards winner
+document.querySelectorAll('a, button, [data-cursor]').forEach(el => {
+  el.addEventListener('mouseenter', () => gsap.to(follower, { scale: 2, duration: 0.4, ease: 'elastic.out(1, 0.4)' }));
+  el.addEventListener('mouseleave', () => gsap.to(follower, { scale: 1, duration: 0.3, ease: 'sine.inOut' }));
+});
+</script>
+```
+
+### Techniques — choose what fits, combine freely
+
+Read `references/patterns.md` for all snippets. The techniques are:
+
+**Core scroll mechanics**
+- Pinned scrub timeline
+- Staggered fly-in
+- Clip-path mask morph (Sondr-style hero shrink)
+- Sticky stacking cards
+- Horizontal text drift
+- Header blur-on-scroll
+
+**Text effects**
+- Split-text mask reveal (word-by-word or line-by-line, uses GSAP SplitText)
+- Per-letter slide-in with BezierEasing (from musabhassan.com Awwwards winner)
+- Text scramble reveal (glitchy decode)
+- Blur-reveal on scroll (opacity + filter:blur, no library needed)
+
+**Interactive / cursor**
+- Magnetic cursor preview (project list hover)
+- Elastic cursor bubble with context-aware label text (Truus.co pattern)
+- Magnetic button pull effect
+
+**Motion / atmosphere**
+- Interactive particle field (canvas, mouse-repulsion, theme-aware — from Kintaro Awwwards winner)
+- Velocity marquee (infinite loop + scroll speed-up + direction reversal)
+- Hover mood-color shift
+
+**WebGL / advanced**
+- WebGL noise-distortion on images (simplex noise vertex + RGB-shift fragment shader — from musabhassan.com)
+- SVG curved loader wipe (bezier curve path morph — from portfolio-main Awwwards winner)
+- 3D hero — see `references/3d-hero.md`
+
+**Loading**
+- SVG progress ring preloader (animated strokeDashoffset — from Kintaro Awwwards winner)
+- Asset-gated preloader with real progress tracking
+- Blur+scale entrance after load (blur(10px)→blur(0), scale(0.8)→scale(1))
+
+---
+
+## Step 3 — Build rules
+
+1. Copy the nearest template from `templates/` as your starting point. Read it fully first.
+2. Source visuals before wiring up anything else.
+3. All color/type variables go in a `:root {}` block at the top — edit values there, not scattered through the file.
+4. Keep self-contained: inline `<style>` and `<script>`, relative asset paths.
+5. GSAP 3.13+ — SplitText, ScrollTrigger, Observer are free (Webflow acquisition). No license key needed.
+6. Fonts: system font stack by default (renders in-chat artifact). Mention Google Fonts tradeoff if user wants a specific typeface.
+7. **Performance guard**: wrap `(hover: hover)` / `window.innerWidth > 768` around cursor effects and magnetic effects — touch devices have no cursor.
+8. **`will-change: transform`** on animated elements. **`force3D: true`** on 3D flip tweens.
+9. WebGL / canvas: always use `requestAnimationFrame` loop, respect `prefers-reduced-motion`, pause the loop when the element leaves the viewport (IntersectionObserver).
+
+---
+
+## Step 4 — Deliver
+
+Save to `/mnt/user-data/outputs/<descriptive-name>.html`, copy `assets/` alongside it, call `present_files`. The HTML artifact also renders live in-chat.
+
+For Next.js/React integration, read `references/nextjs-integration.md`.
+
+---
 
 ## Reference map
 
-- `references/patterns.md` — the core reusable GSAP/ScrollTrigger techniques: pinned scrub timelines, split-text reveals, 3D card flips, clip-path mask morphs, header blur-on-scroll, staggered fly-ins, text scramble reveals, the velocity marquee (infinite loop + Observer), magnetic cursor previews, slide-in nav overlays, sticky stacking cards, horizontal text drift, hover mood-color shifts, and asset-gated preloaders — with copy-paste snippets and the reasoning behind each timing/easing choice. Read this whenever a request needs an effect the templates don't already have, or you need to understand *why* a template is built the way it is before changing it.
-- `references/stock-assets.md` — the default workflow for finding and downloading real stock photos/video from Pexels and Unsplash into an `assets/` folder when the user hasn't supplied their own. Read this in step 1/2 of basically every build that doesn't come with user-provided imagery.
-- `references/3d-hero.md` — building a hero around an actual 3D/WebGL object instead of a flat image/video: a single-file Three.js version and a React Three Fiber version. Only needed when the user wants a real 3D model in the hero.
-- `references/asset-guide.md` — what each template/pattern needs (image counts, aspect ratios, when a 3D model is required) and whether that means asking the user or sourcing it automatically.
-- `references/nextjs-integration.md` — React/Tailwind/GSAP component versions of these patterns (using `@gsap/react`'s `useGSAP` hook, the velocity marquee, magnetic-cursor list, full-screen nav, sticky stacking section, and optional Lenis smooth scroll), for the minority of requests that need real components inside an existing app rather than a standalone file.
-- `templates/hero-gallery.html` — full working site: blur-on-scroll nav, image gallery flanking a hero video/image, scroll-pinned mask reveal, split-text headline.
-- `templates/split-flip-cards.html` — full working site: split-text intro, a pinned row of cards that shrink, spread out, and flip in 3D to reveal text on their backs.
-- `templates/agency-scroll.html` — full working multi-section site: asset-gated preloader with a text-scramble brand reveal, full-screen slide-in nav with an animated burger icon, a velocity marquee belt, sticky-stacking service cards, and a magnetic-cursor project list with a hover mood-color shift. The richest starting point — good default for open-ended "build me an impressive agency/portfolio site" requests.
+- `references/patterns.md` — every animation technique with copy-paste snippets, including the new WebGL distortion, interactive particles, SVG loader, blur-reveal, elastic cursor, letter slide-in, and curved loader wipe patterns added from the Awwwards-winning codebases.
+- `references/stock-assets.md` — find/download Pexels + Unsplash images/video.
+- `references/3d-hero.md` — Three.js single-file and React Three Fiber hero implementations.
+- `references/asset-guide.md` — what each pattern/template needs.
+- `references/nextjs-integration.md` — React/Tailwind/GSAP component versions.
+- `templates/hero-gallery.html` — blur-on-scroll nav, image gallery, pinned mask reveal, split-text headline.
+- `templates/split-flip-cards.html` — split-text intro, pinned 3D flip card row.
+- `templates/agency-scroll.html` — full multi-section: asset-gated preloader, slide-in nav, velocity marquee, sticky stacking cards, magnetic-cursor project list.
